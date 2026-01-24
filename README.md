@@ -28,4 +28,3 @@ In local tournaments, scoring is often done manually and only final results are 
 
 ---
 
-## 🗂️ System Architecture

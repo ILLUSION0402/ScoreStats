@@ -28,7 +28,7 @@ class Ball(db.Model):
     non_striker_id = db.Column(db.Integer, db.ForeignKey('player.id'), nullable=False)
     bowler_id = db.Column(db.Integer, db.ForeignKey('player.id'), nullable=False)
     runs = db.Column(db.Integer, default=0)
-    wickets = db.Column(db.Integer, default=0)
+
     extras = db.Column(db.Integer, default=0)
     is_wicket = db.Column(db.Boolean, default=False)
     dismissed_player_id = db.Column(db.Integer, db.ForeignKey('player.id'), nullable=True)
