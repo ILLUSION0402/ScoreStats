@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}{{ player.name }} - Player Profile{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    
+    <!-- Player Header -->
+    <div class="bg-gradient-to-r from-green-500 to-blue-600 rounded-lg shadow-lg p-8 text-white">
+        <div class="flex items-center space-x-6">
+            <!-- Player Avatar -->
+            <div class="w-24 h-24 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-3xl font-bold">
+                {{ player.jersey_number or '?' }}
+            </div>
+            
+            <!-- Player Info -->
+            <div class="flex-1">
+                <h1 class="text-4xl font-bold mb-2">{{ player.name }}</h1>
+                <div class="flex items-center space-x-4 text-sm">
+                    <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full">
+                        {{ player.role }}
+                    </span>
+                    <span>{{ player.team.name if player.team else 'No Team' }}</span>
+                    <span>•</span>
+                    <span>{{ player.batting_style }}</span>
+                    {% if player.bowling_style %}
+                    <span>•</span>
+                    <span>{{ player.bowling_style }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <!-- Batting Stats -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                <svg class="w-6 h-6 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                </svg>
+                Batting Statistics
+            </h2>
+            
+            <div class="space-y-4">
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <span class="text-gray-600">Runs</span>
+                    <span class="text-2xl font-bold text-gray-800">{{ stats.batting.runs }}</span>
+                </div>
+                
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <span class="text-gray-600">Balls Faced</span>
+                    <span class="text-2xl font-bold text-gray-800">{{ stats.batting.balls_faced }}</span>
+                </div>
+                
+                <div class="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                    <span class="text-gray-600">Average</span>
+                    <span class="text-2xl font-bold text-blue-600">{{ stats.batting.average }}</span>
+                </div>
+                
+                <div class="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                    <span class="text-gray-600">Strike Rate</span>
+                    <span class="text-2xl font-bold text-blue-600">{{ stats.batting.strike_rate }}</span>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="text-center p-3 bg-gray-50 rounded-lg">
+                        <p class="text-gray-600 text-sm mb-1">Fours</p>
+                        <p class="text-xl font-bold text-gray-800">{{ stats.batting.fours }}</p>
+                    </div>
+                    <div class="text-center p-3 bg-gray-50 rounded-lg">
+                        <p class="text-gray-600 text-sm mb-1">Sixes</p>
+                        <p class="text-xl font-bold text-gray-800">{{ stats.batting.sixes }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bowling Stats -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                <svg class="w-6 h-6 mr-2 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z"/>
+                </svg>
+                Bowling Statistics
+            </h2>
+            
+            <div class="space-y-4">
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <span class="text-gray-600">Wickets</span>
+                    <span class="text-2xl font-bold text-gray-800">{{ stats.bowling.wickets }}</span>
+                </div>
+                
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <span class="text-gray-600">Overs</span>
+                    <span class="text-2xl font-bold text-gray-800">{{ stats.bowling.overs }}</span>
+                </div>
+                
+                <div class="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
+                    <span class="text-gray-600">Economy</span>
+                    <span class="text-2xl font-bold text-purple-600">{{ stats.bowling.economy }}</span>
+                </div>
+                
+                <div class="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
+                    <span class="text-gray-600">Average</span>
+                    <span class="text-2xl font-bold text-purple-600">{{ stats.bowling.average }}</span>
+                </div>
+                
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <span class="text-gray-600">Strike Rate</span>
+                    <span class="text-2xl font-bold text-gray-800">{{ stats.bowling.strike_rate }}</span>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+    
+    <!-- Recent Performance (placeholder) -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">Recent Performance</h2>
+        <p class="text-gray-600">Performance charts will be added in Week 3 (Analytics)</p>
+    </div>
+    
+</div>
+{% endblock %}

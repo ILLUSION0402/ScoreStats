@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% block title %}{{ match.team1 }} vs {{ match.team2 }} - Live Score{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    
+    <!-- Match Header -->
+    <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg shadow-lg p-6 text-white">
+        <div class="flex justify-between items-center mb-4">
+            <div>
+                <p class="text-sm opacity-90">{{ match.match_type }} • {{ match.venue }}</p>
+                <p class="text-sm opacity-75">{{ match.match_date.strftime('%B %d, %Y') if match.match_date }}</p>
+            </div>
+            {% if match.status == 'live' %}
+            <span class="px-4 py-2 bg-red-500 rounded-full text-sm font-bold animate-pulse">
+                LIVE
+            </span>
+            {% endif %}
+        </div>
+        
+        <!-- Teams -->
+        <div class="grid grid-cols-3 gap-4 items-center">
+            <!-- Team 1 -->
+            <div class="text-center">
+                <h2 class="text-2xl font-bold mb-2">{{ match.home_team.name }}</h2>
+                <p class="text-3xl font-bold">{{ innings_1.total_runs if innings_1 else 0 }}/{{ innings_1.total_wickets if innings_1 else 0 }}</p>
+                <p class="text-sm opacity-90">({{ innings_1.total_overs if innings_1 else 0.0 }} overs)</p>
+            </div>
+            
+            <!-- VS -->
+            <div class="text-center">
+                <p class="text-sm opacity-75">versus</p>
+            </div>
+            
+            <!-- Team 2 -->
+            <div class="text-center">
+                <h2 class="text-2xl font-bold mb-2">{{ match.away_team.name }}</h2>
+                <p class="text-3xl font-bold">{{ innings_2.total_runs if innings_2 else 0 }}/{{ innings_2.total_wickets if innings_2 else 0 }}</p>
+                <p class="text-sm opacity-90">({{ innings_2.total_overs if innings_2 else 0.0 }} overs)</p>
+            </div>
+        </div>
+        
+        <!-- Match Status -->
+        {% if match.status == 'completed' and match.win_margin %}
+        <div class="mt-6 text-center">
+            <p class="text-lg font-semibold">
+                 {{ match.winner_team.name if match.winner_team else 'Winner' }} won {{ match.win_margin }}
+            </p>
+        </div>
+        {% elif innings_2 and innings_2.target %}
+        <div class="mt-6 text-center">
+            <p class="text-sm">{{ match.away_team.name }} need {{ innings_2.target - innings_2.total_runs }} runs from {{ (match.over_limit - innings_2.total_overs) * 6 | int }} balls</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Tabs -->
+    <div class="bg-white rounded-lg shadow-md">
+        <div class="border-b border-gray-200">
+            <nav class="flex space-x-8 px-6" id="scorecard-tabs">
+                <button class="py-4 border-b-2 border-blue-600 text-blue-600 font-semibold tab-button active" data-tab="scorecard">
+                    Scorecard
+                </button>
+                <button class="py-4 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-semibold tab-button" data-tab="summary">
+                    Summary
+                </button>
+                <button class="py-4 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-semibold tab-button" data-tab="commentary">
+                    Commentary
+                </button>
+            </nav>
+        </div>
+        
+        <!-- Tab Content: Scorecard -->
+        <div id="scorecard-content" class="p-6 tab-content">
+            {% if innings_1 %}
+            <h3 class="text-lg font-bold text-gray-800 mb-4">
+                {{ innings_1.batting_team.name }} Innings
+            </h3>
+            
+            <!-- Batting Scorecard -->
+            <div class="overflow-x-auto mb-8">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Batsman</th>
+                            <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">R</th>
+                            <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">B</th>
+                            <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">4s</th>
+                            <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">6s</th>
+                            <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">SR</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        {% for bat in batting_scorecard_1 %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-3">
+                                <div>
+                                    <p class="font-semibold text-gray-800">{{ bat.player_name }}</p>
+                                    {% if bat.dismissal %}
+                                    <p class="text-xs text-gray-500">{{ bat.dismissal }}</p>
+                                    {% else %}
+                                    <p class="text-xs text-green-600">not out</p>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 text-center font-bold">{{ bat.runs }}</td>
+                            <td class="px-4 py-3 text-center">{{ bat.balls }}</td>
+                            <td class="px-4 py-3 text-center">{{ bat.fours }}</td>
+                            <td class="px-4 py-3 text-center">{{ bat.sixes }}</td>
+                            <td class="px-4 py-3 text-center">{{ bat.strike_rate }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Bowling Scorecard -->
+            <h4 class="text-md font-bold text-gray-800 mb-3">Bowling</h4>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Bowler</th>
+                            <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">O</th>
+                            <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">M</th>
+                            <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">R</th>
+                            <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">W</th>
+                            <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">Econ</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        {% for bowl in bowling_scorecard_1 %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-3 font-semibold text-gray-800">{{ bowl.player_name }}</td>
+                            <td class="px-4 py-3 text-center">{{ bowl.overs }}</td>
+                            <td class="px-4 py-3 text-center">{{ bowl.maidens }}</td>
+                            <td class="px-4 py-3 text-center">{{ bowl.runs }}</td>
+                            <td class="px-4 py-3 text-center font-bold">{{ bowl.wickets }}</td>
+                            <td class="px-4 py-3 text-center">{{ bowl.economy }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-center text-gray-500 py-8">No scorecard data available</p>
+            {% endif %}
+        </div>
+        
+        <!-- Tab Content: Summary -->
+        <div id="summary-content" class="p-6 tab-content hidden">
+            <p class="text-gray-600">Match summary coming soon...</p>
+        </div>
+        
+        <!-- Tab Content: Commentary -->
+        <div id="commentary-content" class="p-6 tab-content hidden">
+            <p class="text-gray-600">Ball-by-ball commentary coming soon...</p>
+        </div>
+    </div>
+    
+</div>
+
+<script>
+// Tab switching
+document.querySelectorAll('.tab-button').forEach(button => {
+    button.addEventListener('click', () => {
+        const tabName = button.dataset.tab;
+        
+        // Update buttons
+        document.querySelectorAll('.tab-button').forEach(btn => {
+            btn.classList.remove('border-blue-600', 'text-blue-600', 'active');
+            btn.classList.add('border-transparent', 'text-gray-500');
+        });
+        button.classList.remove('border-transparent', 'text-gray-500');
+        button.classList.add('border-blue-600', 'text-blue-600', 'active');
+        
+        // Update content
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.add('hidden');
+        });
+        document.getElementById(`${tabName}-content`).classList.remove('hidden');
+    });
+});
+</script>
+{% endblock %}

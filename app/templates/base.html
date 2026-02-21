@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Cricket Analytics{% endblock %}</title>
+    <!-- tailwindcss.com -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- socket.io (for real-time updates in the frontend) -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <!-- custom css -->
+     <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+     <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#1e40af',
+                        'secondary': '#7c3aed',
+                    },
+                },
+            },
+        }
+     </script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation Header -->
+     <nav class="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg">
+
+       <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo/Brand -->
+                <a href="/" class="flex items-center space-x-3">
+                    <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 2a8 8 0 100 16 8 8 0 000-16zM9 9V5h2v4h4v2H9z"/>
+                    </svg>
+                    <span class="text-2xl font-bold">Cricket Analytics</span>
+                </a>
+                
+                <!-- Navigation Links -->
+                <div class="hidden md:flex space-x-6">
+                    <a href="/" class="hover:text-blue-200 transition">
+                        Dashboard
+                    </a>
+                    <a href="/matches" class="hover:text-blue-200 transition">
+                        Matches
+                    </a>
+                    <a href="/teams" class="hover:text-blue-200 transition">
+                        Teams
+                    </a>
+                    <a href="/players" class="hover:text-blue-200 transition">
+                        Players
+                    </a>
+                    <a href="/analytics" class="hover:text-blue-200 transition">
+                        Analytics
+                    </a>
+                </div>
+                
+                <!-- Mobile Menu Button -->
+                <button id="mobile-menu-button" class="md:hidden">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Mobile Menu -->
+            <div id="mobile-menu" class="hidden md:hidden mt-4 space-y-2">
+                <a href="/" class="block py-2 hover:text-blue-200">Dashboard</a>
+                <a href="/matches" class="block py-2 hover:text-blue-200">Matches</a>
+                <a href="/teams" class="block py-2 hover:text-blue-200">Teams</a>
+                <a href="/players" class="block py-2 hover:text-blue-200">Players</a>
+                <a href="/analytics" class="block py-2 hover:text-blue-200">Analytics</a>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container mx-auto px-6 mt-4">
+                {% for category, message in messages %}
+                <div class="bg-{{ 'green' if category == 'success' else 'red' }}-100 border border-{{ 'green' if category == 'success' else 'red' }}-400 text-{{ 'green' if category == 'success' else 'red' }}-700 px-4 py-3 rounded mb-4">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-8">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white mt-12">
+        <div class="container mx-auto px-6 py-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <p class="text-sm">&copy; 2026 Cricket Analytics. All rights reserved.</p>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-sm hover:text-blue-400">About</a>
+                    <a href="#" class="text-sm hover:text-blue-400">Contact</a>
+                    <a href="#" class="text-sm hover:text-blue-400">API Docs</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    <!-- Page-specific JS -->
+    {% block scripts %}{% endblock %}
+    
+</body>
+</html>

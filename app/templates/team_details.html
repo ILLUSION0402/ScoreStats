@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}{{ team.name }} - Team Details{% endblock %}
+{% block content %}
+<div class="space-y-6">
+  <div class="bg-white rounded-lg shadow-md p-6">
+    <h1 class="text-3xl font-bold text-gray-800">{{ team.name }}</h1>
+    <p class="text-gray-600 mt-2">Short Name: {{ team.short_name }}</p>
+    <p class="text-gray-600">Total Players: {{ players|length }}</p>
+  </div>
+
+  <div class="bg-white rounded-lg shadow-md p-6">
+    <h2 class="text-xl font-bold text-gray-800 mb-4">Players</h2>
+    <div class="space-y-2">
+      {% for player in players %}
+      <a href="/player/{{ player.id }}" class="block p-3 rounded hover:bg-gray-50">
+        <span class="font-semibold text-gray-800">{{ player.name }}</span>
+        <span class="text-gray-500"> - {{ player.role }}</span>
+      </a>
+      {% else %}
+      <p class="text-gray-500">No players found.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow-md p-6">
+    <h2 class="text-xl font-bold text-gray-800 mb-4">Recent Matches</h2>
+    <div class="space-y-2">
+      {% for match in matches[:10] %}
+      <a href="/match/{{ match.id }}" class="block p-3 rounded hover:bg-gray-50">
+        <span class="font-semibold text-gray-800">Match #{{ match.id }}</span>
+        <span class="text-gray-500"> - {{ match.match_type }} - {{ match.status }}</span>
+      </a>
+      {% else %}
+      <p class="text-gray-500">No matches found.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
