@@ -1,75 +1,128 @@
-from flask import Blueprint, render_template,request,jsonify
-from models import Match, Innings, Ball,Team
-from extensions import db
-from services import *
-main= Blueprint("main",__name__)
-@main.route("/create_match",methods=["POST"])
+from flask import Blueprint, jsonify, render_template, request
+
+from app.models import Ball, Inning, Match, Player, Team
+from app.services import BallService, InningsService, MatchService, StatisticsService
+
+
+main_bp = Blueprint("main", __name__)
+
+
+@main_bp.route("/create_match", methods=["POST"])
 def create_match():
-    data= request.get_json()
-    team1= data.get("team1")
-    team2= data.get("team2")
-    over_limit= data.get("over_limit",20)
-    match= Match(team1= team1, team2= team2, over_limit=over_limit)
-    db.session.add(match)
-    db.session.commit()
-    return jsonify({"message":"Match created successfully","match_id": match.id}),201
-@main.route("/start_inning/<int:match_id>",methods=["POST"])
+    data = request.get_json(silent=True) or {}
+    team_1_id = data.get("team_1_id", data.get("team1_id"))
+    team_2_id = data.get("team_2_id", data.get("team2_id"))
+
+    try:
+        match = MatchService.create_match(
+            team_1_id=team_1_id,
+            team_2_id=team_2_id,
+            over_limit=data.get("over_limit", 20),
+            match_type=data.get("match_type", "t20"),
+            match_date=data.get("match_date"),
+        )
+        return jsonify({"message": "Match created successfully", "match_id": match.id}), 201
+    except Exception as e:
+        return jsonify({"message": str(e)}), 400
+
+
+@main_bp.route("/start_inning/<int:match_id>", methods=["POST"])
 def start_inning(match_id):
-    data= request.get_json()
-    batting_team= data.get("batting_team")
-    bowling_team= data.get("bowling_team")
-    innings_number= data.get("innings_number",1)
-    inning_obj= Innings(match_id= match_id, batting_team= batting_team, bowling_team= bowling_team, innings_number= innings_number)
-    existing = Innings.query.filter_by(match_id=match_id,innings_number=innings_number).first()
-    if existing:
-        return jsonify({"message": "Inning already exists"}), 400
-    db.session.add(inning_obj)
-    db.session.commit()
-    return jsonify({"message":"Inning started successfully","inning_id": inning_obj.id}),201
-@main.route("/api/record_ball",methods=["POST"])
+    data = request.get_json(silent=True) or {}
+    batting_team_id = data.get("batting_team_id", data.get("batting_team"))
+    bowling_team_id = data.get("bowling_team_id", data.get("bowling_team"))
+    innings_number = data.get("innings_number", data.get("inning_number", 1))
+
+    try:
+        inning_obj = InningsService.start_innings(
+            match_id=match_id,
+            batting_team_id=batting_team_id,
+            bowling_team_id=bowling_team_id,
+            innings_number=innings_number,
+        )
+        return jsonify({"message": "Inning started successfully", "inning_id": inning_obj.id}), 201
+    except Exception as e:
+        return jsonify({"message": str(e)}), 400
+
+
+@main_bp.route("/api/record_ball", methods=["POST"])
 def api_record_ball():
-    data= request.get_json()
-    new_ball= record_ball(data)
-    return jsonify({"message":"Ball recorded successfully","ball_id": new_ball.id}),201
-@main.route("/match/<int:match_id>/summary",methods=["GET"])
+    data = request.get_json(silent=True) or {}
+    try:
+        new_ball = BallService.record_ball(**data)
+        return jsonify({"message": "Ball recorded successfully", "ball_id": new_ball.id}), 201
+    except Exception as e:
+        return jsonify({"message": str(e)}), 400
+
+
+@main_bp.route("/match/<int:match_id>/summary", methods=["GET"])
 def get_match_summary(match_id):
-    balls = Ball.query.join(Innings).filter(
-        Innings.match_id == match_id
-    ).all()
-    total_runs = sum(ball.runs + ball.extras for ball in balls)
+    balls = Ball.query.join(Inning).filter(Inning.match_id == match_id).all()
+    total_runs = sum(ball.total_runs for ball in balls)
     total_wickets = sum(1 for ball in balls if ball.is_wicket)
+
     if balls:
-        last_ball = max(balls, key=lambda b: (b.over, b.balls))
-        overs = f"{last_ball.over}.{last_ball.balls}"
+        last_ball = max(balls, key=lambda b: (b.over_number, b.ball_number))
+        overs = f"{last_ball.over_number}.{last_ball.ball_number}"
     else:
         overs = "0.0"
 
-    return jsonify({
-        "match_id": match_id,
-        "total_runs": total_runs,
-        "total_wickets": total_wickets,
-        "overs": overs
-    }),200
-@main.route("/")
+    return jsonify(
+        {
+            "match_id": match_id,
+            "total_runs": total_runs,
+            "total_wickets": total_wickets,
+            "overs": overs,
+        }
+    ), 200
+
+
+@main_bp.route("/")
 def home():
-    teams=Team.query.all()
-    matches= Match.query.all()
-    return render_template("home.html",teams= teams,matches= matches)
-@main.route("/match/<int:match_id>")
+    teams = Team.query.all()
+    matches = Match.query.order_by(Match.match_date.desc()).all()
+    players = Player.query.limit(10).all()
+    live_count = Match.query.filter_by(status="live").count()
+    return render_template("home.html", teams=teams, matches=matches, players=players, live_count=live_count)
+
+
+@main_bp.route("/match/<int:match_id>")
 def score_match(match_id):
-    match= Match.query.get(match_id)
-    innings= Innings.query.filter_by(match_id= match_id).all()
-    balls= Ball.query.join(Innings).filter(Innings.match_id== match_id).all()
-    return render_template("match.html",match= match,innings= innings,balls= balls)
-@main.route("/stats/<int:player_id>")
+    match = Match.query.get_or_404(match_id)
+    innings_list = Inning.query.filter_by(match_id=match_id).order_by(Inning.innings_number).all()
+    innings_1 = innings_list[0] if len(innings_list) > 0 else None
+    innings_2 = innings_list[1] if len(innings_list) > 1 else None
+
+    batting_scorecard_1 = []
+    bowling_scorecard_1 = []
+    if innings_1:
+        batting_scorecard_1 = StatisticsService.get_batting_scorecard(innings_1.id)
+        bowling_scorecard_1 = StatisticsService.get_bowling_scorecard(innings_1.id)
+
+    return render_template(
+        "match_details.html",
+        match=match,
+        innings_1=innings_1,
+        innings_2=innings_2,
+        batting_scorecard_1=batting_scorecard_1,
+        bowling_scorecard_1=bowling_scorecard_1,
+    )
+
+
+@main_bp.route("/stats/<int:player_id>")
 def player_stats(player_id):
-   stats=get_batting_stats(player_id)
-   consistency= get_consistency_stats(player_id)
-   recent=get_recent_form(player_id)
-   return render_template("player_stats.html",stats= stats,consistency= consistency,recent= recent,player_id= player_id)
-@main.route("/predict_winner/<int:team_a>/<int:team_b>")
-def predict_winner(team_a,team_b):
-    prediction= predict_match(team_a,team_b)
-    if prediction is None:
-        return render_template("prediction.html", error="Prediction could not be made due to insufficient data."), 400
-    return render_template("prediction.html",prediction= prediction)
+    player = Player.query.get_or_404(player_id)
+    stats = StatisticsService.get_player_career_stats(player_id)
+    return render_template("player_profile.html", player=player, stats=stats)
+
+
+@main_bp.route("/predict_winner/<int:team_a>/<int:team_b>")
+def predict_winner(team_a, team_b):
+    return jsonify(
+        {
+            "success": False,
+            "error": "Prediction endpoint is not implemented yet.",
+            "team_a": team_a,
+            "team_b": team_b,
+        }
+    ), 501
