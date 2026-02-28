@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Match #{{ match.id }} - Scorecard{% endblock %}
+{% block content %}
+<div class="space-y-6">
+  <div class="bg-white rounded-lg shadow-md p-6">
+    <h1 class="text-2xl font-bold text-gray-800">Match #{{ match.id }}</h1>
+    <p class="text-gray-600 mt-2">
+      Team {{ match.team_1_id }} vs Team {{ match.team_2_id }} | {{ match.match_type }} | {{ match.status }}
+    </p>
+    {% if match.match_date %}
+    <p class="text-gray-500 text-sm mt-1">Date: {{ match.match_date.strftime('%b %d, %Y %I:%M %p') }}</p>
+    {% endif %}
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-bold text-gray-800 mb-3">Innings 1</h2>
+      {% if innings_1 %}
+      <p class="text-gray-700">Runs/Wickets: {{ innings_1.total_runs }}/{{ innings_1.total_wickets }}</p>
+      <p class="text-gray-700">Overs: {{ innings_1.total_overs }}</p>
+      {% else %}
+      <p class="text-gray-500">Not started.</p>
+      {% endif %}
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-bold text-gray-800 mb-3">Innings 2</h2>
+      {% if innings_2 %}
+      <p class="text-gray-700">Runs/Wickets: {{ innings_2.total_runs }}/{{ innings_2.total_wickets }}</p>
+      <p class="text-gray-700">Overs: {{ innings_2.total_overs }}</p>
+      {% if innings_2.target %}
+      <p class="text-gray-700">Target: {{ innings_2.target }}</p>
+      {% endif %}
+      {% else %}
+      <p class="text-gray-500">Not started.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow-md p-6">
+    <h2 class="text-xl font-bold text-gray-800 mb-3">Batting Scorecard (Innings 1)</h2>
+    {% if batting_scorecard_1 %}
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="text-left p-2">Player</th>
+            <th class="text-left p-2">R</th>
+            <th class="text-left p-2">B</th>
+            <th class="text-left p-2">4s</th>
+            <th class="text-left p-2">6s</th>
+            <th class="text-left p-2">SR</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in batting_scorecard_1 %}
+          <tr class="border-t">
+            <td class="p-2">{{ row.player_name }}</td>
+            <td class="p-2">{{ row.runs }}</td>
+            <td class="p-2">{{ row.balls }}</td>
+            <td class="p-2">{{ row.fours }}</td>
+            <td class="p-2">{{ row.sixes }}</td>
+            <td class="p-2">{{ row.strike_rate }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="text-gray-500">No scorecard data yet.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
