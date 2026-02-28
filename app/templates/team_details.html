@@ -1,39 +1,73 @@
 {% extends "base.html" %}
-{% block title %}{{ team.name }} - Team Details{% endblock %}
+
+{% block title %}{{ team.name }} - Team Profile{% endblock %}
+
 {% block content %}
 <div class="space-y-6">
-  <div class="bg-white rounded-lg shadow-md p-6">
-    <h1 class="text-3xl font-bold text-gray-800">{{ team.name }}</h1>
-    <p class="text-gray-600 mt-2">Short Name: {{ team.short_name }}</p>
-    <p class="text-gray-600">Total Players: {{ players|length }}</p>
-  </div>
-
-  <div class="bg-white rounded-lg shadow-md p-6">
-    <h2 class="text-xl font-bold text-gray-800 mb-4">Players</h2>
-    <div class="space-y-2">
-      {% for player in players %}
-      <a href="/player/{{ player.id }}" class="block p-3 rounded hover:bg-gray-50">
-        <span class="font-semibold text-gray-800">{{ player.name }}</span>
-        <span class="text-gray-500"> - {{ player.role }}</span>
-      </a>
-      {% else %}
-      <p class="text-gray-500">No players found.</p>
-      {% endfor %}
+    
+    <!-- Back Button -->
+    <a href="/teams" class="text-blue-600 hover:text-blue-700 flex items-center">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        </svg>
+        Back to Teams
+    </a>
+    
+    <!-- Team Header -->
+    <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg shadow-lg p-8 text-white">
+        <div class="flex items-center space-x-6">
+            <!-- Team Logo -->
+            <div class="w-24 h-24 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-3xl font-bold">
+                {{ team.short_name }}
+            </div>
+            
+            <!-- Team Info -->
+            <div class="flex-1">
+                <h1 class="text-4xl font-bold mb-2">{{ team.name }}</h1>
+                <div class="flex items-center space-x-4 text-sm">
+                    {% if team.home_ground %}
+                    <span>🏟️ {{ team.home_ground }}</span>
+                    {% endif %}
+                    <span>•</span>
+                    <span>👥 {{ players|length }} Players</span>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-
-  <div class="bg-white rounded-lg shadow-md p-6">
-    <h2 class="text-xl font-bold text-gray-800 mb-4">Recent Matches</h2>
-    <div class="space-y-2">
-      {% for match in matches[:10] %}
-      <a href="/match/{{ match.id }}" class="block p-3 rounded hover:bg-gray-50">
-        <span class="font-semibold text-gray-800">Match #{{ match.id }}</span>
-        <span class="text-gray-500"> - {{ match.match_type }} - {{ match.status }}</span>
-      </a>
-      {% else %}
-      <p class="text-gray-500">No matches found.</p>
-      {% endfor %}
+    
+    <!-- Team Squad -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-6">Team Squad</h2>
+        
+        <!-- Players by Role -->
+        {% for role, role_players in players_by_role.items() %}
+        <div class="mb-8">
+            <h3 class="text-lg font-semibold text-gray-700 mb-4">{{ role.title() }}s</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for player in role_players %}
+                <a href="/player/{{ player.id }}" class="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                    <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+                        {{ player.jersey_number or '?' }}
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-semibold text-gray-800">{{ player.name }}</p>
+                        <p class="text-sm text-gray-500">{{ player.batting_style }}</p>
+                    </div>
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
     </div>
-  </div>
+    
+    <!-- Recent Matches -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">Recent Matches</h2>
+        <p class="text-gray-500 text-center py-8">Match history coming soon!</p>
+    </div>
+    
 </div>
 {% endblock %}
