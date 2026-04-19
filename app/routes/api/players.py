@@ -1,6 +1,7 @@
 from flask import Blueprint,request,jsonify
 from app.models import Player 
 from app.extensions import db
+from app.services.deletion_service import DeletionService
 from app.validators import PlayerCreateSchema,PlayerUpdateSchema
 from marshmallow import ValidationError
 player_bp=Blueprint('palyer',__name__)
@@ -38,16 +39,16 @@ def create_player():
     except ValidationError as e:
         return jsonify({
             'success':False,
-            'error message':e.messages
+            'errors':e.messages
         }),400
     except Exception as e:
         db.session.rollback()
         return jsonify({
             'success':False,'error':str(e)
         }),500
-@player_bp.route('/player_id',methods=['POST'])
+@player_bp.route('/<int:player_id>',methods=['PUT'])
 def update_player(player_id):
-    player=Player.query.get(player_id)
+    player=db.session.get(Player, player_id)
     if not player:
         return jsonify({
             'success':False,'error':'player not found'
@@ -61,20 +62,26 @@ def update_player(player_id):
         return jsonify({
             'success':True,
             'message':'Palyer updated successfully',
-            'player':Player.to_dict()
-        })
+            'player':player.to_dict()
+        }),200
     except ValidationError as e:
         return jsonify({'success': False, 'errors': e.messages}), 400
-@player_bp.route('/<int:palyer_id>',methods=['DELETE'])
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+@player_bp.route('/<int:player_id>',methods=['DELETE'])
 def delete_player(player_id):
-    player=Player.query.get(player_id)
-    if not Player:
-        return jsonify({'success':False,'error':'Player not found'}),404
-    db.session.delete(Player)
-    db.session.commit()
-    return jsonify({
-        'success':True,
-        'message':'Player deleted successfully'
-    }) ,200
+    try:
+        result = DeletionService.delete_player(player_id)
+        return jsonify({
+            'success':True,
+            'message':'Player deleted successfully',
+            **result,
+        }) ,200
+    except ValueError as exc:
+        return jsonify({'success':False,'error':str(exc)}),404
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
 
     

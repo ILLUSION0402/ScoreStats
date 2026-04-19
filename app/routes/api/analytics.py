@@ -18,6 +18,7 @@ from http import HTTPStatus
 
 from flask import Blueprint, jsonify, request
 from marshmallow import ValidationError
+from app.services.prediction_service import predict_innings
 
 from app.services.analytics_service import (
     AnalyticsError,
@@ -36,7 +37,6 @@ from app.services.analytics_service import (
 from app.validators.analytics_validator import (
     load_career_query,
     load_innings_query,
-    load_selection_payload,
 )
 
 logger = logging.getLogger(__name__)
@@ -260,13 +260,6 @@ def innings_bowling(innings_id: int):
                     "bowlers": _bowling_schema_many.dump(profiles)}), HTTPStatus.OK
 
 
-@analytics_bp.post("/select-xi")
-def select_xi():
-    payload = load_selection_payload(request.get_json(silent=True) or {})
-    preview = AnalyticsService.pre_match_team_preview(payload["match_id"])
-    return jsonify(preview), HTTPStatus.OK
-
-
 @analytics_bp.get("/player/<int:player_id>/career")
 def player_career(player_id: int):
     """Fixed: no longer calls missing *_safe methods."""
@@ -290,7 +283,14 @@ def player_career(player_id: int):
         breakdown     = AnalyticsService._bowling_component_breakdown(profile)
     return jsonify({"player_id": player_id, "stat_type": stat_type,
                     "stats": stats_payload, "breakdown": breakdown}), HTTPStatus.OK
-
+@analytics_bp.get("/innings/<int:innings_id>/predict")
+def predict_innings_score(innings_id: int):
+    """
+    Predict projected final score and win probability for an active innings.
+    Called by the match frontend after every ball update.
+    """
+    result = predict_innings(innings_id)
+    return jsonify(result), HTTPStatus.OK
 
 # ---------------------------------------------------------------------------
 # New: raw innings-history
